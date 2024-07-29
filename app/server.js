@@ -1,8 +1,11 @@
 const express = require("express");
 const { default: mongoose } = require("mongoose");
-const path = require("path");
-const { AllRoutes } = require("./router/router");
 const morgan = require("morgan");
+const path = require("path");
+const createError = require("http-errors");
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
+const { AllRoutes } = require("./router/router");
 
 module.exports = class Application {
   #app = express();
@@ -24,13 +27,36 @@ module.exports = class Application {
     this.#app.use(express.json());
     this.#app.use(express.urlencoded({ extended: true }));
     this.#app.use(express.static(path.join(__dirname, "..", "public")));
+    this.#app.use(
+      "/api-doc",
+      swaggerUI.serve,
+      swaggerUI.setup(
+        swaggerJsDoc({
+          swaggerDefinition: {
+            info: {
+              title: "Store",
+              version: "2.0.0",
+              description: "نمونه فروشگاه",
+            },
+            servers: [
+              {
+                url: "http://localhost:3000",
+              },
+            ],
+          },
+          apis: ["./app/router/**/*.js"],
+        })
+      )
+    );
   }
+
   createServer() {
     const http = require("http");
     http.createServer(this.#app).listen(this.#PORT, () => {
       console.log("run > http://localhost:" + this.#PORT);
     });
   }
+
   async connectToMongoDB() {
     try {
       if (mongoose.connections[0].readyState) return;
@@ -56,17 +82,19 @@ module.exports = class Application {
 
   errorHandling() {
     this.#app.use((req, res, next) => {
-      return res.status(404).json({
-        statusCode: 404,
-        message: "آدرس مورد نظر یافت نشد",
-      });
+      next(createError.NotFound("آدرس مورد نظر یافت نشد"));
     });
     this.#app.use((err, req, res, next) => {
-      const statusCode = err.status || 500;
-      const message = err.message || "InternalServerError";
+      const serverError = createError.InternalServerError();
+
+      const statusCode = err.status || serverError.statusCode;
+      const message = err.message || serverError.message;
+
       return res.status(statusCode).json({
-        statusCode,
-        message,
+        errors: {
+          statusCode,
+          message,
+        },
       });
     });
   }

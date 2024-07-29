@@ -4,7 +4,7 @@ const Schema = new mongoose.Schema({
   first_name: { type: String },
   last_name: { type: String },
   username: { type: String, lowercase: true },
-  mobile: { type: String },
+  mobile: { type: String, required: true },
   email: { type: String, lowercase: true },
   password: { type: String },
   bills: { type: [], default: [] },
@@ -14,7 +14,7 @@ const Schema = new mongoose.Schema({
     type: Object,
     default: {
       code: 0,
-      expires: 0,
+      expiresIn: 0,
     },
   },
   roles: { type: [String], default: ["USER"] },
