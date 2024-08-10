@@ -21,6 +21,7 @@ module.exports = class Application {
     this.createServer();
     this.createRoutes();
     this.errorHandling();
+    this.initRedis();
   }
 
   configApplication() {
@@ -76,6 +77,10 @@ module.exports = class Application {
       await mongoose.connection.close();
       process.exit(0);
     });
+  }
+
+  initRedis() {
+    require("./utils/init_redis");
   }
 
   createRoutes() {
