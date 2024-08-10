@@ -6,6 +6,8 @@ const {
 const {
   randomNumberGenerator,
   signAccessToken,
+  verifyRefreshToken,
+  signRefreshToken,
 } = require("../../../../utils/functions");
 const { EXPIRES_IN, USER_ROLE } = require("../../../../utils/constants");
 const Controller = require("../../controller");
@@ -52,9 +54,30 @@ class UserAuthController extends Controller {
         throw createHttpError.Unauthorized("کد شما منقضی شده است");
 
       const accessToken = await signAccessToken(user._id);
+      const refreshToken = await signRefreshToken(user._id);
       return res.json({
         data: {
           accessToken,
+          refreshToken,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async refreshToken(req, res, next) {
+    try {
+      const { refreshToken } = req.body;
+      const mobile = await verifyRefreshToken(refreshToken);
+      const user = await UserModel.findOne({ mobile });
+      const accessToken = await signAccessToken(user._id);
+      const newRefreshToken = await signRefreshToken(user._id);
+
+      return res.json({
+        data: {
+          accessToken,
+          refreshToken: newRefreshToken,
         },
       });
     } catch (error) {
@@ -67,6 +90,7 @@ class UserAuthController extends Controller {
       code,
       expiresIn: EXPIRES_IN,
     };
+    console.log(otp);
     const result = await this.checkExistUser(mobile);
 
     if (result) {

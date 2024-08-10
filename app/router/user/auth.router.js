@@ -58,9 +58,23 @@ const router = require("express").Router();
  *                        description: Unauthorization
  *                    '500':
  *                        description: Internal server error
+ * /user/refresh-token:
+ *    post:
+ *          summary: Send refresh token for get new token and refresh token
+ *          description: Generate refresh token
+ *          tags: [UserAuth]
+ *          parameters:
+ *          -           in: body
+ *                      required: true
+ *                      type: string
+ *                      name: refreshToken
+ *          responses:
+ *              200:
+ *                    description: success
  */
 router.post("/get-otp", UserAuthController.getOtp);
 router.post("/check-otp", UserAuthController.checkOtp);
+router.post("/refresh-token", UserAuthController.refreshToken);
 
 module.exports = {
   UserAuthRoutes: router,
